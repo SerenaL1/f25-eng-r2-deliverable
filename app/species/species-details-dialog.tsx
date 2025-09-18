@@ -18,7 +18,7 @@ import { useCallback, useEffect, useState } from "react";
 
 type Species = Database["public"]["Tables"]["species"]["Row"];
 
-// Define the comment type explicitly to avoid 'any' issues
+// Define the comment type
 interface Comment {
   id: number;
   species_id: number;
