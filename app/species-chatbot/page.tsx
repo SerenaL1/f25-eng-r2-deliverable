@@ -8,6 +8,8 @@ export default function SpeciesChatbot() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [message, setMessage] = useState("");
   const [chatLog, setChatLog] = useState<{ role: "user" | "bot"; content: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleInput = () => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -16,11 +18,69 @@ export default function SpeciesChatbot() {
     }
   };
 
-const handleSubmit = async () => {
-  // TODO: Implement this function
-}
+  const handleSubmit = async () => {
+    // Trim the message and check if it's empty
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage || isLoading) {
+      return;
+    }
 
-return (
+    // Add user message to chat log
+    const userMessage = { role: "user" as const, content: trimmedMessage };
+    setChatLog((prev) => [...prev, userMessage]);
+
+    // Clear the input and reset textarea height
+    setMessage("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+
+    // Set loading state
+    setIsLoading(true);
+
+    try {
+      // Call your API endpoint
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: trimmedMessage,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = (await response.json()) as { response: string };
+
+      // Add bot response to chat log
+      const botMessage = { role: "bot" as const, content: data.response };
+      setChatLog((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error("Error calling chatbot API:", error);
+
+      // Add error message to chat log
+      const errorMessage = {
+        role: "bot" as const,
+        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+      };
+      setChatLog((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  return (
     <>
       <TypographyH2>Species Chatbot</TypographyH2>
       <div className="mt-4 flex gap-4">
@@ -58,6 +118,27 @@ return (
               </div>
             ))
           )}
+          {/* Loading indicator */}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="max-w-[75%] rounded-2xl rounded-bl-none border border-border bg-foreground p-3 text-sm text-primary-foreground">
+                <div className="flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div className="h-2 w-2 animate-bounce rounded-full bg-current"></div>
+                    <div
+                      className="h-2 w-2 animate-bounce rounded-full bg-current"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="h-2 w-2 animate-bounce rounded-full bg-current"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                  </div>
+                  <span>Thinking...</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         {/* Textarea and submission */}
         <div className="mt-4 flex flex-col items-end">
@@ -66,16 +147,19 @@ return (
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onInput={handleInput}
+            onKeyPress={handleKeyPress}
             rows={1}
             placeholder="Ask about a species..."
-            className="w-full resize-none overflow-hidden rounded border border-border bg-background p-2 text-sm text-foreground focus:outline-none"
+            className="w-full resize-none overflow-hidden rounded border border-border bg-background p-2 text-sm text-foreground focus:outline-none disabled:opacity-50"
+            disabled={isLoading}
           />
           <button
             type="button"
             onClick={() => void handleSubmit()}
-            className="mt-2 rounded bg-primary px-4 py-2 text-background transition hover:opacity-90"
+            disabled={isLoading || !message.trim()}
+            className="mt-2 rounded bg-primary px-4 py-2 text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Enter
+            {isLoading ? "Sending..." : "Enter"}
           </button>
         </div>
       </div>
