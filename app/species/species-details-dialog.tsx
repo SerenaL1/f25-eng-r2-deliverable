@@ -195,7 +195,7 @@ export default function SpeciesDetailsDialog({ species, currentUser }: { species
           <div className="border-t pt-4">
             <h3 className="mb-4 text-lg font-semibold text-gray-700">Comments</h3>
 
-            {/* Add Comment Form - currentUser is always string now */}
+            {/* Add Comment Form - currentUser is always string */}
             <form
               onSubmit={(e) => {
                 handleSubmitComment(e).catch(console.error);
@@ -258,3 +258,4 @@ export default function SpeciesDetailsDialog({ species, currentUser }: { species
     </Dialog>
   );
 }
+

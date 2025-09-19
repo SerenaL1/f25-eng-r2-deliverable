@@ -52,10 +52,10 @@ type FormData = z.infer<typeof speciesSchema>;
 export default function EditSpeciesDialog({ species }: { species: Species }) {
   const router = useRouter();
 
-  // Control open/closed state of the dialog
+  // open/closed state of dialog
   const [open, setOpen] = useState<boolean>(false);
 
-  // Set default values for the form to the existing species data
+  // Populate the editing form with default values -- the existing species data
   const defaultValues = {
     scientific_name: species.scientific_name,
     common_name: species.common_name,
@@ -232,3 +232,4 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
     </Dialog>
   );
 }
+

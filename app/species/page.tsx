@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
 import AddSpeciesDialog from "./add-species-dialog";
 import SpeciesCard from "./species-card";
+import WikipediaSearch from "./wikipedia-search";
 
 export default async function SpeciesList() {
   // Create supabase server component client and obtain user session from stored cookie
@@ -28,6 +29,11 @@ export default async function SpeciesList() {
         <TypographyH2>Species List</TypographyH2>
         <AddSpeciesDialog userId={sessionId} />
       </div>
+
+      <div className="mb-6">
+        <WikipediaSearch />
+      </div>
+
       <Separator className="my-4" />
       <div className="flex flex-wrap justify-center">
         {species?.map((species) => <SpeciesCard key={species.id} species={species} currentUser={sessionId} />)}
