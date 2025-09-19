@@ -45,6 +45,22 @@ const speciesSchema = z.object({
     .string()
     .nullable()
     .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+  image: z
+    .string()
+    .nullable()
+    .transform((val) => (!val || val.trim() === "" ? null : val.trim()))
+    .refine(
+      (val) => {
+        if (!val) return true; // Allow null/empty values
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: "Please enter a valid URL" },
+    ),
 });
 
 type FormData = z.infer<typeof speciesSchema>;
@@ -62,6 +78,7 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
     kingdom: species.kingdom as z.infer<typeof kingdoms>,
     total_population: species.total_population,
     description: species.description,
+    image: species.image,
   };
 
   // Instantiate form functionality with React Hook Form
@@ -70,6 +87,9 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
     defaultValues,
     mode: "onChange",
   });
+
+  // Watch the image URL to show preview
+  const currentImageUrl = form.watch("image");
 
   const onSubmit = async (input: FormData) => {
     const supabase = createBrowserSupabaseClient();
@@ -81,6 +101,7 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
         kingdom: input.kingdom,
         scientific_name: input.scientific_name,
         total_population: input.total_population,
+        image: input.image,
       })
       .eq("id", species.id);
 
@@ -201,6 +222,34 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
               />
               <FormField
                 control={form.control}
+                name="image"
+                render={({ field }) => {
+                  const { value, ...rest } = field;
+                  return (
+                    <FormItem>
+                      <FormLabel>Image URL</FormLabel>
+                      <FormControl>
+                        <Input value={value ?? ""} placeholder="https://example.com/species-image.jpg" {...rest} />
+                      </FormControl>
+                      <FormMessage />
+                      {currentImageUrl && (
+                        <div className="mt-2">
+                          <img
+                            src={currentImageUrl}
+                            alt="Species preview"
+                            className="max-h-32 max-w-full rounded border object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        </div>
+                      )}
+                    </FormItem>
+                  );
+                }}
+              />
+              <FormField
+                control={form.control}
                 name="description"
                 render={({ field }) => {
                   const { value, ...rest } = field;
@@ -232,4 +281,3 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
     </Dialog>
   );
 }
-
