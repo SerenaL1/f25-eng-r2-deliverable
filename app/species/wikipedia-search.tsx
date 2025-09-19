@@ -47,7 +47,7 @@ export default function WikipediaSearch() {
         throw new Error("Article not found");
       }
 
-      const data: WikipediaSearchResult = await searchResponse.json();
+      const data = (await searchResponse.json()) as WikipediaSearchResult;
 
       if (!data.extract) {
         toast({
